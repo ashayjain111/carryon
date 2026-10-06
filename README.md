@@ -10,7 +10,7 @@ Chain of custody uses QR tokens; payment is held in (mock) escrow until delivery
 | API | Spring Boot 4 (Java 21), **modular monolith** | One deployable, clean module boundaries |
 | DB | PostgreSQL 16 + Flyway | Source of truth for all transactional state |
 | Auth | Spring Security + JWT (HS256, stateless) | No extra infra. Cognito is a drop-in swap later |
-| Frontend | React + TypeScript + Vite + Tailwind | Simple SPA, static hosting on S3 + CloudFront |
+| Frontend | React + TypeScript + Vite + Tailwind | Simple SPA, static hosting |
 | Hosting | Free tier: Neon (DB), Render (API), Cloudflare Pages (web) | See docs/DEPLOY-FREE.md |
 
 **Deploy free:** docs/DEPLOY-FREE.md (Neon + Render + Cloudflare Pages). CI is in .github/workflows/ci.yml.
