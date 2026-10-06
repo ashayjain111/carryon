@@ -34,8 +34,3 @@ git push -u origin main
 ## 5. Check
 Open the Pages URL, register, and run the flow. If the first call hangs, the API is waking up: wait a minute and retry.
 
-## About AWS and your resume
-Everything above is free but not AWS. To show AWS knowledge at no cost:
-- Keep `docs/DEPLOY-AWS.md` and `docs/ARCHITECTURE.md` in the repo as the AWS target design, and say in the README that the live demo runs on free hosting.
-- Optionally, deploy to AWS later using free credits (new accounts and the GitHub Student Developer Pack often include some), and delete everything when the credits run low. Set a budget alarm first.
-- Do not leave an ALB, NAT gateway or RDS running unattended: those bill by the hour.

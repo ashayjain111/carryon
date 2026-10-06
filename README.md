@@ -11,9 +11,9 @@ Chain of custody uses QR tokens; payment is held in (mock) escrow until delivery
 | DB | PostgreSQL 16 + Flyway | Source of truth for all transactional state |
 | Auth | Spring Security + JWT (HS256, stateless) | No extra infra. Cognito is a drop-in swap later |
 | Frontend | React + TypeScript + Vite + Tailwind | Simple SPA, static hosting on S3 + CloudFront |
-| Hosting | AWS: S3/CloudFront, one ECS Fargate (or EC2) task, RDS | See docs/ARCHITECTURE.md |
+| Hosting | Free tier: Neon (DB), Render (API), Cloudflare Pages (web) | See docs/DEPLOY-FREE.md |
 
-**Deploy free:** docs/DEPLOY-FREE.md (Neon + Render + Cloudflare Pages). AWS target design: docs/DEPLOY-AWS.md. CI is in .github/workflows/ci.yml.
+**Deploy free:** docs/DEPLOY-FREE.md (Neon + Render + Cloudflare Pages). CI is in .github/workflows/ci.yml.
 
 **Not used (on purpose):** Redis, Kafka, OpenSearch, Kubernetes, microservices, WebSockets, SQS. See docs/ARCHITECTURE.md for the reasoning and the measurable triggers for adding each.
 

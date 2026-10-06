@@ -1,4 +1,5 @@
 # Architecture review: right-sized for the MVP
+n> Hosting-agnostic: nothing in the code depends on AWS. Cloud services named below are optional future options.
 
 Priority order: correctness → security → simplicity → maintainability → performance → scalability.
 Rule: every technology must solve a problem we currently have.
