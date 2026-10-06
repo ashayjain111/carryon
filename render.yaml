@@ -1,0 +1,24 @@
+# Render Blueprint: free web service built from the backend Dockerfile.
+# Database: free Neon PostgreSQL (see docs/DEPLOY-FREE.md). Secrets are entered in the Render dashboard.
+services:
+  - type: web
+    name: carryon-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: DB_URL
+        sync: false          # jdbc:postgresql://<neon-host>/<db>?sslmode=require
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false          # your frontend URL, e.g. https://carryon.pages.dev
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx300m -XX:+UseSerialGC   # free tier has 512 MB RAM

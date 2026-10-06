@@ -13,6 +13,9 @@ export type ParcelEvent = { type: string; actorId?: string; note?: string; creat
 export type Notification = { id: string; parcelId?: string; message: string; read: boolean; createdAt: string }
 export type Dispute = { id: string; parcelId: string; kind: string; description: string; status: string; createdAt: string }
 
+// Dev: empty (Vite proxies /api). Production: set VITE_API_BASE to the deployed backend URL.
+const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+
 let token: string | null = localStorage.getItem('token')
 export const getToken = () => token
 export function setToken(t: string | null) {
@@ -26,7 +29,7 @@ export class ApiError extends Error {
 }
 
 export async function api<T = unknown>(path: string, method = 'GET', body?: unknown): Promise<T> {
-  const res = await fetch('/api' + path, {
+  const res = await fetch(API_BASE + '/api' + path, {
     method,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),

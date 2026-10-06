@@ -13,7 +13,7 @@ Chain of custody uses QR tokens; payment is held in (mock) escrow until delivery
 | Frontend | React + TypeScript + Vite + Tailwind | Simple SPA, static hosting on S3 + CloudFront |
 | Hosting | AWS: S3/CloudFront, one ECS Fargate (or EC2) task, RDS | See docs/ARCHITECTURE.md |
 
-**Deploy:** see docs/DEPLOY-AWS.md. CI is in .github/workflows/ci.yml.
+**Deploy free:** docs/DEPLOY-FREE.md (Neon + Render + Cloudflare Pages). AWS target design: docs/DEPLOY-AWS.md. CI is in .github/workflows/ci.yml.
 
 **Not used (on purpose):** Redis, Kafka, OpenSearch, Kubernetes, microservices, WebSockets, SQS. See docs/ARCHITECTURE.md for the reasoning and the measurable triggers for adding each.
 
