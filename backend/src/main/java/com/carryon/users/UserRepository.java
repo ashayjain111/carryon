@@ -2,9 +2,9 @@ package com.carryon.users;
 
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRepository extends JpaRepository<User, UUID> {
-    Optional<User> findByEmailIgnoreCase(String email);
-    boolean existsByEmailIgnoreCase(String email);
+public interface UserRepository extends MongoRepository<User, UUID> {
+    Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
 }

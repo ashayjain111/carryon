@@ -1,8 +1,8 @@
 package com.carryon.trips;
 
 import com.carryon.common.ApiException;
-import com.carryon.parcels.ParcelRepository;
 import com.carryon.parcels.Parcel;
+import com.carryon.parcels.ParcelRepository;
 import com.carryon.users.User;
 import com.carryon.users.UserRepository;
 import java.time.LocalDate;
@@ -11,16 +11,15 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class TripService {
     private final TripRepository trips;
+    private final TripOps tripOps;
     private final UserRepository users;
     private final ParcelRepository parcels;
 
-    @Transactional
     public Trip create(UUID travellerId, TripController.CreateTripRequest r) {
         User u = users.findById(travellerId).orElseThrow(() -> ApiException.notFound("User"));
         if (u.getKycStatus() != User.KycStatus.VERIFIED) {
@@ -39,17 +38,20 @@ public class TripService {
         t.setTravellerId(travellerId);
         t.setOriginCity(r.originCity().trim());
         t.setDestinationCity(r.destinationCity().trim());
+        t.setOriginKey(t.getOriginCity().toLowerCase());
+        t.setDestinationKey(t.getDestinationCity().toLowerCase());
         t.setDepartureDate(r.departureDate());
         t.setTotalCapacityG(r.totalCapacityG());
         t.setPersonalLuggageG(r.personalLuggageG());
-        return trips.save(t);
+        t.setBookedG(0);
+        t.setAvailableG(r.totalCapacityG() - r.personalLuggageG());
+        return trips.insert(t);
     }
 
     public List<Trip> mine(UUID travellerId) {
         return trips.findByTravellerIdOrderByDepartureDateDesc(travellerId);
     }
 
-    @Transactional
     public void cancel(UUID travellerId, UUID tripId) {
         Trip t = trips.findById(tripId).orElseThrow(() -> ApiException.notFound("Trip"));
         if (!t.getTravellerId().equals(travellerId)) throw ApiException.forbidden("Not your trip");
@@ -58,6 +60,6 @@ public class TripService {
         if (parcels.existsByTripIdAndStatusIn(tripId, active)) {
             throw ApiException.conflict("Trip has active parcels and cannot be cancelled");
         }
-        t.setStatus(Trip.Status.CANCELLED);
+        tripOps.cancel(tripId);
     }
 }

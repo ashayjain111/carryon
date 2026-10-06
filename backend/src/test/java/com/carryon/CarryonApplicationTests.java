@@ -44,7 +44,7 @@ class CarryonApplicationTests {
     private UUID newUser(String name) {
         String email = name + "-" + UUID.randomUUID() + "@test.local";
         auth.register(new RegisterRequest(email, "password123", name, "+911234567890"));
-        User u = users.findByEmailIgnoreCase(email).orElseThrow();
+        User u = users.findByEmail(email).orElseThrow();
         u.setKycStatus(User.KycStatus.VERIFIED);
         users.save(u);
         return u.getId();

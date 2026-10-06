@@ -1,14 +1,10 @@
 spring:
   application:
     name: carryon
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/carryon}
-    username: ${DB_USER:carryon}
-    password: ${DB_PASSWORD:carryon}
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/carryon?directConnection=true}
+    representation:
+      uuid: standard
   jackson:
     default-property-inclusion: non_null
 

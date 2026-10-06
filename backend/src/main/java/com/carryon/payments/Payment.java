@@ -1,39 +1,26 @@
 package com.carryon.payments;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "payments")
+@Document("payments")
 @Getter @Setter @NoArgsConstructor
 public class Payment {
     public enum Status { HELD, RELEASED, REFUNDED }
 
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "parcel_id", nullable = false, unique = true)
-    private UUID parcelId;
-
-    @Column(name = "payer_id", nullable = false)
+    @Id private UUID id = UUID.randomUUID();
+    @Version private Long version;
+    private UUID parcelId;          // unique index: one payment per parcel
     private UUID payerId;
-
-    @Column(name = "amount_paise", nullable = false)
     private long amountPaise;
-
-    @Column(name = "platform_fee_paise", nullable = false)
     private long platformFeePaise;
-
-    @Enumerated(EnumType.STRING)
     private Status status = Status.HELD;
-
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "settled_at")
+    private Instant createdAt = Instant.now();
     private Instant settledAt;
 }

@@ -1,31 +1,20 @@
 package com.carryon.notifications;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "notifications")
+@Document("notifications")
 @Getter @Setter @NoArgsConstructor
 public class Notification {
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "user_id", nullable = false)
+    @Id private UUID id = UUID.randomUUID();
     private UUID userId;
-
-    @Column(name = "parcel_id")
     private UUID parcelId;
-
-    @Column(nullable = false)
     private String message;
-
-    @Column(name = "is_read")
     private boolean read;
-
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Instant createdAt;
+    private Instant createdAt = Instant.now();
 }

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 /** All /api/admin/** routes require ROLE_ADMIN (see SecurityConfig). Dispute routes live in the disputes module. */
@@ -30,11 +29,11 @@ public class AdminController {
     }
 
     @PostMapping("/users/{id}/enabled")
-    @Transactional
     public UserView setEnabled(@PathVariable UUID id, @RequestBody EnabledRequest r) {
         User u = users.findById(id).orElseThrow(() -> ApiException.notFound("User"));
         if (u.getRole() == User.Role.ADMIN) throw ApiException.badRequest("Cannot disable an admin");
         u.setEnabled(r.enabled());
+        users.save(u);
         return UserView.of(u);
     }
 

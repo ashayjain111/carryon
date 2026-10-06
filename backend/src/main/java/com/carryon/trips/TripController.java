@@ -33,7 +33,7 @@ public class TripController {
         public static TripView of(Trip t, Double rating) {
             return new TripView(t.getId(), t.getTravellerId(), t.getOriginCity(), t.getDestinationCity(),
                     t.getDepartureDate(), t.getTotalCapacityG(), t.getPersonalLuggageG(),
-                    t.getBookedG(), t.availableG(), t.getStatus().name(), rating);
+                    t.getBookedG(), t.getAvailableG(), t.getStatus().name(), rating);
         }
     }
 

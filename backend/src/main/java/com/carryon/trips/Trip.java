@@ -1,49 +1,38 @@
 package com.carryon.trips;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "trips")
+@Document("trips")
 @Getter @Setter @NoArgsConstructor
 public class Trip {
     public enum Status { OPEN, CANCELLED }
 
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "traveller_id", nullable = false)
+    @Id private UUID id = UUID.randomUUID();
     private UUID travellerId;
-
-    @Column(name = "origin_city", nullable = false)
     private String originCity;
-
-    @Column(name = "destination_city", nullable = false)
     private String destinationCity;
-
-    @Column(name = "departure_date", nullable = false)
+    private String originKey;          // lower-cased, for indexed case-insensitive matching
+    private String destinationKey;
     private LocalDate departureDate;
-
-    @Column(name = "total_capacity_g", nullable = false)
     private int totalCapacityG;
-
-    @Column(name = "personal_luggage_g", nullable = false)
     private int personalLuggageG;
-
-    /** Never written through the entity: only via TripRepository.reserve/release (atomic SQL). */
-    @Column(name = "booked_g", insertable = false, updatable = false)
+    /**
+     * bookedG and availableG are written ONLY by TripOps.reserve/release (atomic conditional updates).
+     * availableG is stored, not derived, so the "is there room?" check and the decrement happen in one
+     * atomic single-document operation. Never call save() on an existing trip: it would overwrite
+     * these counters with stale values.
+     */
     private int bookedG;
-
-    @Enumerated(EnumType.STRING)
+    private int availableG;
     private Status status = Status.OPEN;
+    private Instant createdAt = Instant.now();
 
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Instant createdAt;
-
-    public int availableG() { return totalCapacityG - personalLuggageG - bookedG; }
+    public int availableG() { return availableG; }
 }

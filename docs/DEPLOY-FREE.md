@@ -2,7 +2,7 @@
 
 | Part | Free service | Notes |
 |---|---|---|
-| Database | **Neon** PostgreSQL | 0.5 GB free, no card |
+| Database | **MongoDB Atlas** M0 | 512 MB free, no card, replica set (transactions work) |
 | API | **Render** free web service (Docker) | Sleeps after 15 min idle; first request takes ~30–60 s to wake |
 | Frontend | **Cloudflare Pages** (or Netlify) | Unlimited static hosting |
 | CI | GitHub Actions | Free for public repos |
@@ -10,19 +10,20 @@
 ## 1. Push to GitHub (public repo)
 ```powershell
 cd C:\Users\Dell\carryon
-git remote add origin https://github.com/<you>/carryon.git
-git push -u origin main
+git push
 ```
 
-## 2. Database on Neon
-1. neon.tech → sign up with GitHub → create project `carryon` (any region near you).
-2. From the connection details, note **host**, **database**, **user**, **password**.
-3. Your JDBC URL is: `jdbc:postgresql://<host>/<database>?sslmode=require`
+## 2. Database on MongoDB Atlas
+1. cloud.mongodb.com → sign up → **Create a free cluster (M0)**, any nearby region.
+2. Database Access → add a user (username + strong password).
+3. Network Access → add `0.0.0.0/0` (Render has no fixed IP; the database user password is your protection).
+4. Connect → Drivers → copy the connection string and put the database name before the `?`:
+   `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/carryon?retryWrites=true&w=majority`
 
 ## 3. API on Render
 1. render.com → sign up with GitHub → **New → Blueprint** → pick the repo (it reads `render.yaml`).
-2. Fill the prompted env vars: `DB_URL`, `DB_USER`, `DB_PASSWORD`, a strong `ADMIN_PASSWORD`, and `CORS_ORIGIN` (put a placeholder now, fix after step 4).
-3. Deploy. When live, open `https://<name>.onrender.com/actuator/health` and expect `{"status":"UP"}`. Flyway creates the tables on first start.
+2. Fill the prompted env vars: `MONGODB_URI` (from step 2), a strong `ADMIN_PASSWORD`, and `CORS_ORIGIN` (a placeholder for now, fixed after step 4).
+3. Deploy. When live, open `https://<name>.onrender.com/actuator/health` and expect `{"status":"UP"}`. Indexes are created on first start.
 
 ## 4. Frontend on Cloudflare Pages
 1. dash.cloudflare.com → Workers & Pages → Create → Pages → connect the repo.
@@ -33,4 +34,3 @@ git push -u origin main
 
 ## 5. Check
 Open the Pages URL, register, and run the flow. If the first call hangs, the API is waking up: wait a minute and retry.
-

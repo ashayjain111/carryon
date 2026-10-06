@@ -21,14 +21,14 @@ public class AdminSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (users.existsByEmailIgnoreCase(props.adminEmail())) return;
+        if (users.existsByEmail(props.adminEmail().toLowerCase())) return;
         User admin = new User();
         admin.setEmail(props.adminEmail().toLowerCase());
         admin.setPasswordHash(encoder.encode(props.adminPassword()));
         admin.setFullName("Platform Admin");
         admin.setRole(User.Role.ADMIN);
         admin.setKycStatus(User.KycStatus.VERIFIED);
-        users.save(admin);
+        users.insert(admin);
         log.info("Seeded admin account {}", props.adminEmail());
     }
 }

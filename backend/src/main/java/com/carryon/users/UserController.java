@@ -5,7 +5,6 @@ import com.carryon.common.CurrentUser;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -32,11 +31,11 @@ public class UserController {
      * opaque provider reference: raw Aadhaar/PAN numbers and document images are never persisted here.
      */
     @PostMapping("/me/kyc/mock-verify")
-    @Transactional
     public UserView mockKyc(Authentication auth) {
         User u = users.findById(CurrentUser.id(auth)).orElseThrow(() -> ApiException.notFound("User"));
         u.setKycStatus(User.KycStatus.VERIFIED);
         u.setKycReference("mock-" + UUID.randomUUID());
+        users.save(u);
         return UserView.of(u);
     }
 }

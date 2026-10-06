@@ -3,6 +3,7 @@ package com.carryon.common;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
     ResponseEntity<Map<String, Object>> integrity(DataIntegrityViolationException e) {
         log.warn("Integrity violation: {}", e.getMostSpecificCause().getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Request conflicts with existing data"));
+    }
+
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    ResponseEntity<Map<String, Object>> busy(ConcurrencyFailureException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Busy, please retry"));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

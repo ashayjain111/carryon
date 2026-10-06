@@ -3,10 +3,12 @@ package com.carryon.auth;
 import com.carryon.common.ApiException;
 import com.carryon.config.AppProperties;
 import com.carryon.users.User;
+import com.carryon.users.UserController;
 import com.carryon.users.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -15,7 +17,6 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,22 +26,26 @@ public class AuthService {
     private final JwtEncoder jwtEncoder;
     private final AppProperties props;
 
-    @Transactional
     public AuthController.AuthResponse register(AuthController.RegisterRequest r) {
-        if (users.existsByEmailIgnoreCase(r.email())) {
+        String email = r.email().trim().toLowerCase();
+        if (users.existsByEmail(email)) {
             throw ApiException.conflict("Email already registered");
         }
         User u = new User();
-        u.setEmail(r.email().trim().toLowerCase());
+        u.setEmail(email);
         u.setPasswordHash(encoder.encode(r.password()));
         u.setFullName(r.fullName().trim());
         u.setPhone(r.phone());
-        users.save(u);
+        try {
+            users.insert(u);                       // unique index on email closes the check-then-insert race
+        } catch (DuplicateKeyException e) {
+            throw ApiException.conflict("Email already registered");
+        }
         return respond(u);
     }
 
     public AuthController.AuthResponse login(AuthController.LoginRequest r) {
-        User u = users.findByEmailIgnoreCase(r.email().trim()).orElse(null);
+        User u = users.findByEmail(r.email().trim().toLowerCase()).orElse(null);
         boolean ok = u != null && encoder.matches(r.password(), u.getPasswordHash());
         if (!ok || !u.isEnabled()) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
@@ -58,6 +63,6 @@ public class AuthService {
                 .build();
         String token = jwtEncoder.encode(
                 JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
-        return new AuthController.AuthResponse(token, com.carryon.users.UserController.UserView.of(u));
+        return new AuthController.AuthResponse(token, UserController.UserView.of(u));
     }
 }

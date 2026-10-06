@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,7 +30,6 @@ public class RatingController {
 
     /** Sender and traveller each rate the other once, after the parcel is COMPLETED. */
     @PostMapping("/parcels/{parcelId}/ratings")
-    @Transactional
     public RatingView rate(Authentication a, @PathVariable UUID parcelId, @Valid @RequestBody RateRequest r) {
         UUID me = CurrentUser.id(a);
         Parcel p = parcels.findById(parcelId).orElseThrow(() -> ApiException.notFound("Parcel"));
@@ -47,12 +45,11 @@ public class RatingController {
         rt.setRateeId(ratee);
         rt.setScore(r.score());
         rt.setComment(r.comment());
-        ratings.saveAndFlush(rt);     // UNIQUE(parcel_id, rater_id) -> 409 on duplicates
+        ratings.insert(rt);     // unique index (parcelId, raterId) -> 409 on duplicates
         return new RatingView(rt.getScore(), rt.getComment(), rt.getCreatedAt());
     }
 
     @GetMapping("/users/{userId}/ratings")
-    @Transactional(readOnly = true)
     public Summary summary(@PathVariable UUID userId) {
         List<Rating> all = ratings.findByRateeIdOrderByCreatedAtDesc(userId);
         double avg = all.stream().mapToInt(Rating::getScore).average().orElse(0);
