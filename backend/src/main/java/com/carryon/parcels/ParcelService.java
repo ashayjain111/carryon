@@ -1,6 +1,7 @@
 package com.carryon.parcels;
 
 import com.carryon.common.ApiException;
+import com.carryon.common.Dates;
 import com.carryon.common.Tx;
 import com.carryon.config.AppProperties;
 import com.carryon.notifications.NotificationService;
@@ -90,7 +91,7 @@ public class ParcelService {
                     || !t.getDestinationCity().equalsIgnoreCase(p.getDestinationCity())) {
                 throw ApiException.badRequest("Trip route does not match the parcel route");
             }
-            if (t.getDepartureDate().isBefore(LocalDate.now())) throw ApiException.conflict("Trip already departed");
+            if (t.getDepartureDate().isBefore(Dates.today())) throw ApiException.conflict("Trip already departed");
             if (t.availableG() < p.getWeightG()) throw ApiException.conflict("Trip does not have enough spare capacity");
             p.setTripId(tripId);
             p.setStatus(Status.REQUESTED);

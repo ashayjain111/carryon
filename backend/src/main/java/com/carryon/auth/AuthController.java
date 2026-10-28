@@ -19,7 +19,7 @@ public class AuthController {
             @NotBlank @Email @Size(max = 255) String email,
             @NotBlank @Size(min = 8, max = 72) String password,
             @NotBlank @Size(max = 120) String fullName,
-            @Pattern(regexp = "^[+0-9 ]{7,20}$", message = "invalid phone") String phone) {}
+            @Pattern(regexp = "^([+0-9 ]{7,20})?$", message = "invalid phone") String phone) {}
 
     public record LoginRequest(@NotBlank String email, @NotBlank String password) {}
 

@@ -16,5 +16,7 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false          # your frontend URL, e.g. https://carryon.pages.dev
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod          # refuses to start with the default JWT secret / admin password
       - key: JAVA_TOOL_OPTIONS
         value: -Xmx300m -XX:+UseSerialGC   # free tier has 512 MB RAM

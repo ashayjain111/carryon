@@ -35,7 +35,7 @@ public class AuthService {
         u.setEmail(email);
         u.setPasswordHash(encoder.encode(r.password()));
         u.setFullName(r.fullName().trim());
-        u.setPhone(r.phone());
+        u.setPhone(r.phone() == null || r.phone().isBlank() ? null : r.phone().trim());
         try {
             users.insert(u);                       // unique index on email closes the check-then-insert race
         } catch (DuplicateKeyException e) {

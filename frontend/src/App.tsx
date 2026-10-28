@@ -41,7 +41,13 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('send')
 
   const refreshUser = () => api<User>('/users/me').then(setUser)
-  useEffect(() => { if (getToken()) refreshUser().catch(() => setToken(null)).finally(() => setReady(true)) }, [])
+  useEffect(() => {
+    if (!getToken()) return
+    api<User>('/users/me')
+      .then(u => { setUser(u); setTab(u.role === 'ADMIN' ? 'admin' : 'send') })
+      .catch(() => setToken(null))
+      .finally(() => setReady(true))
+  }, [])
 
   if (!ready) return null
   if (!user) return <Auth onAuth={u => { setUser(u); setTab(u.role === 'ADMIN' ? 'admin' : 'send') }} />

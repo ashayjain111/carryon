@@ -11,7 +11,9 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     run(async () => {
-      const body = mode === 'login' ? { email: f.email, password: f.password } : f
+      const body = mode === 'login'
+        ? { email: f.email.trim(), password: f.password }
+        : { email: f.email.trim(), password: f.password, fullName: f.fullName.trim(), phone: f.phone.trim() || undefined }
       const r = await api<{ token: string; user: User }>(`/auth/${mode}`, 'POST', body)
       setToken(r.token); onAuth(r.user)
     })
@@ -24,11 +26,15 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
       <form onSubmit={submit} className="card space-y-3">
         {mode === 'register' && <>
           <Field label="Full name"><input className="input" required value={f.fullName} onChange={set('fullName')} /></Field>
-          <Field label="Phone"><input className="input" value={f.phone} onChange={set('phone')} placeholder="+91 98765 43210" /></Field>
+          <Field label="Phone (optional)"><input className="input" value={f.phone} onChange={set('phone')} placeholder="+91 98765 43210" /></Field>
         </>}
-        <Field label="Email"><input className="input" type="email" required value={f.email} onChange={set('email')} /></Field>
-        <Field label="Password (min 8)"><input className="input" type="password" required minLength={8} value={f.password} onChange={set('password')} /></Field>
-        <button className="btn w-full" disabled={busy}>{mode === 'login' ? 'Log in' : 'Create account'}</button>
+        <Field label="Email"><input className="input" type="email" required autoComplete="email" value={f.email} onChange={set('email')} /></Field>
+        <Field label="Password (min 8 characters)">
+          <input className="input" type="password" required minLength={8} autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            value={f.password} onChange={set('password')} />
+        </Field>
+        <button className="btn w-full" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create account'}</button>
+        {busy && <p className="text-xs text-slate-500">The free server sleeps when idle, so the first request can take up to a minute.</p>}
         <Err msg={error} />
       </form>
       <button className="mt-3 text-sm text-indigo-700 underline" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>

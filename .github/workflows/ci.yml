@@ -18,7 +18,7 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
-      - run: ./mvnw -B verify
+      - run: chmod +x mvnw && ./mvnw -B verify
       - name: Build container image
         run: docker build -t carryon-api .
 

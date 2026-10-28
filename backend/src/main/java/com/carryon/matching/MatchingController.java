@@ -1,6 +1,7 @@
 package com.carryon.matching;
 
 import com.carryon.common.ApiException;
+import com.carryon.common.Dates;
 import com.carryon.common.CurrentUser;
 import com.carryon.parcels.Parcel;
 import com.carryon.parcels.ParcelService;
@@ -34,7 +35,7 @@ public class MatchingController {
                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
                                  @RequestParam(defaultValue = "0") int minGrams) {
-        LocalDate start = from == null || from.isBefore(LocalDate.now()) ? LocalDate.now() : from;
+        LocalDate start = from == null || from.isBefore(Dates.today()) ? Dates.today() : from;
         LocalDate end = to == null ? start.plusDays(60) : to;
         return rank(tripOps.search(origin, destination, start, end, Math.max(minGrams, 0), 50));
     }
@@ -44,7 +45,7 @@ public class MatchingController {
     public List<TripView> matches(Authentication a, @PathVariable UUID id) {
         Parcel p = parcelService.visible(id, CurrentUser.id(a), false);
         if (!p.getSenderId().equals(CurrentUser.id(a))) throw ApiException.notFound("Parcel");
-        LocalDate today = LocalDate.now();
+        LocalDate today = Dates.today();
         List<Trip> found = tripOps.search(p.getOriginCity(), p.getDestinationCity(), today, today.plusDays(30),
                 p.getWeightG(), 50);
         return rank(found.stream().filter(t -> !t.getTravellerId().equals(p.getSenderId())).toList());

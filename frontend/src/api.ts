@@ -31,13 +31,13 @@ export class ApiError extends Error {
 export async function api<T = unknown>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const res = await fetch(API_BASE + '/api' + path, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(token && !path.startsWith('/auth/') ? { Authorization: `Bearer ${token}` } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   const text = await res.text()
   const data = text ? JSON.parse(text) : null
   if (!res.ok) {
-    if (res.status === 401 && token) { setToken(null); location.reload() }
+    if (res.status === 401 && token && !path.startsWith('/auth/')) { setToken(null); location.reload() }
     const fields = data?.fields ? ' (' + Object.entries(data.fields).map(([k, v]) => `${k}: ${v}`).join(', ') + ')' : ''
     throw new ApiError((data?.error ?? res.statusText) + fields, res.status)
   }

@@ -1,6 +1,7 @@
 package com.carryon.trips;
 
 import com.carryon.common.ApiException;
+import com.carryon.common.Dates;
 import com.carryon.parcels.Parcel;
 import com.carryon.parcels.ParcelRepository;
 import com.carryon.users.User;
@@ -28,7 +29,7 @@ public class TripService {
         if (r.originCity().trim().equalsIgnoreCase(r.destinationCity().trim())) {
             throw ApiException.badRequest("Origin and destination must differ");
         }
-        if (r.departureDate().isBefore(LocalDate.now())) {
+        if (r.departureDate().isBefore(Dates.today())) {
             throw ApiException.badRequest("Departure date is in the past");
         }
         if (r.personalLuggageG() >= r.totalCapacityG()) {

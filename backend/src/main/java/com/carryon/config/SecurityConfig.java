@@ -1,26 +1,36 @@
 package com.carryon.config;
 
+import com.carryon.users.User;
+import com.carryon.users.UserRepository;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -36,7 +46,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain chain(HttpSecurity http, RateLimitFilter rateLimit) throws Exception {
+    SecurityFilterChain chain(HttpSecurity http, RateLimitFilter rateLimit, UserRepository users) throws Exception {
+        var defaultResolver = new DefaultBearerTokenResolver();
         http.csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -46,18 +57,27 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
-            .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter())))
+            .oauth2ResourceServer(o -> o
+                // A stale/expired token left in the browser must never block login or registration.
+                .bearerTokenResolver(req -> req.getRequestURI().startsWith("/api/auth/") ? null : defaultResolver.resolve(req))
+                .jwt(j -> j.jwtAuthenticationConverter(converter(users))))
             .headers(h -> h.frameOptions(f -> f.deny()));
         return http.build();
     }
 
-    private JwtAuthenticationConverter converter() {
-        var authorities = new JwtGrantedAuthoritiesConverter();
-        authorities.setAuthoritiesClaimName("role");
-        authorities.setAuthorityPrefix("ROLE_");
-        var c = new JwtAuthenticationConverter();
-        c.setJwtGrantedAuthoritiesConverter(authorities);
-        return c;
+    /**
+     * Builds the authentication from the database, not just the token: a disabled user is locked out
+     * immediately (not at token expiry), and role changes apply at once. One indexed lookup per request.
+     */
+    private Converter<Jwt, AbstractAuthenticationToken> converter(UserRepository users) {
+        return jwt -> {
+            UUID id;
+            try { id = UUID.fromString(jwt.getSubject()); }
+            catch (RuntimeException e) { throw new BadCredentialsException("Invalid token subject"); }
+            User u = users.findById(id).orElseThrow(() -> new BadCredentialsException("Unknown user"));
+            if (!u.isEnabled()) throw new DisabledException("Account disabled");
+            return new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("ROLE_" + u.getRole().name())));
+        };
     }
 
     @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
@@ -76,11 +96,13 @@ public class SecurityConfig {
         return new NimbusJwtEncoder(new ImmutableSecret<>(key));
     }
 
+    /** CORS_ORIGIN may hold several comma-separated origins (e.g. local + deployed frontend). */
     @Bean CorsConfigurationSource corsConfigurationSource(AppProperties props) {
         var cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(List.of(props.corsOrigin()));
+        cfg.setAllowedOrigins(Arrays.stream(props.corsOrigin().split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        cfg.setMaxAge(3600L);
         var src = new UrlBasedCorsConfigurationSource();
         src.registerCorsConfiguration("/api/**", cfg);
         return src;

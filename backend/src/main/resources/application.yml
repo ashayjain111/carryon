@@ -24,3 +24,9 @@ app:
   platform-fee-percent: 10
   auto-release-hours: 48
   max-declared-value-paise: 2500000
+  seed-demo: ${SEED_DEMO:false}
+
+server:
+  forward-headers-strategy: framework   # behind a proxy (Render), use the real client IP
+  error:
+    include-stacktrace: never

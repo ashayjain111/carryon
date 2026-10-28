@@ -3,6 +3,7 @@ package com.carryon.config;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
@@ -27,6 +28,7 @@ public class MongoConfig {
 
     /** Indexes are created explicitly at startup so correctness never depends on an auto-index flag. */
     @Bean
+    @Order(0)
     ApplicationRunner indexes(MongoTemplate mongo) {
         return args -> {
             mongo.indexOps("users").createIndex(new Index().on("email", Sort.Direction.ASC).unique());
